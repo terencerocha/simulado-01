@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Simulado Cyber 20</title>
+<style>
+/* Layout: uma coluna centrada, cartão de questão único, barra de status no topo */
+:root{
+  --navy:#0F1B2D; --navy2:#16263E; --navy3:#1E3352; --line:#2A4266;
+  --teal:#2DD4BF; --orange:#FB7A45; --fg:#E6EEF7; --muted:#9FB2CC;
+  --ok:#34D399; --bad:#F87171;
+  --mono:ui-monospace,"JetBrains Mono","Cascadia Code",Consolas,monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--navy);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.5}
+.wrap{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:24px 48px;display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-direction:column;gap:4px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--teal)}
+h1{margin:0;font-size:clamp(24px,5vw,32px);line-height:1.15;text-wrap:balance}
+h1 span{color:var(--orange)}
+.sub{color:var(--muted);margin:0}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.stat{background:var(--navy2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat b{font-family:var(--mono);font-size:20px;font-variant-numeric:tabular-nums}
+.stat small{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.stat.streak b{color:var(--orange)}
+.bar{height:6px;background:var(--navy3);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--orange));transition:width .3s}
+.timer{height:3px;background:var(--navy3);border-radius:99px;overflow:hidden}
+.timer i{display:block;height:100%;width:100%;background:var(--teal);transition:width 1s linear}
+.timer.low i{background:var(--orange)}
+.card{background:var(--navy2);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:14px}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.tag{font-family:var(--mono);font-size:12px;padding:3px 8px;border-radius:6px;background:var(--navy3);color:var(--teal);letter-spacing:.04em}
+.qnum{font-family:var(--mono);color:var(--muted);font-size:13px}
+.prompt{font-size:18px;font-weight:600;margin:0;text-wrap:pretty}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{display:flex;gap:12px;align-items:flex-start;text-align:left;width:100%;background:var(--navy);border:1px solid var(--line);border-radius:10px;color:var(--fg);padding:12px 14px;font:inherit;cursor:pointer;transition:border-color .15s,background .15s}
+.opt:hover:not(:disabled){border-color:var(--teal)}
+.opt:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+.opt kbd{font-family:var(--mono);font-size:12px;min-width:24px;height:24px;display:inline-grid;place-items:center;border-radius:6px;background:var(--navy3);color:var(--muted);flex:none}
+.opt span{min-width:0}
+.opt.correct{border-color:var(--ok);background:rgba(52,211,153,.1)}
+.opt.correct kbd{background:var(--ok);color:var(--navy)}
+.opt.wrong{border-color:var(--bad);background:rgba(248,113,113,.1)}
+.opt.wrong kbd{background:var(--bad);color:var(--navy)}
+.opt:disabled{cursor:default}
+.hintbtn{align-self:flex-start;background:none;border:1px dashed var(--line);color:var(--muted);border-radius:8px;padding:6px 10px;font:inherit;font-size:14px;cursor:pointer}
+.hintbtn:hover{color:var(--teal);border-color:var(--teal)}
+.hint{font-size:14px;color:var(--teal);margin:0}
+.feedback{border-left:3px solid var(--teal);background:var(--navy);padding:12px 14px;border-radius:0 10px 10px 0;display:flex;flex-direction:column;gap:6px}
+.feedback.bad{border-left-color:var(--bad)}
+.feedback b{font-size:15px}
+.feedback p{margin:0;color:var(--muted)}
+.trap{font-family:var(--mono);font-size:12px;color:var(--orange);letter-spacing:.06em;text-transform:uppercase}
+.actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;align-items:center}
+.btn{background:var(--teal);color:var(--navy);border:0;border-radius:10px;padding:11px 18px;font:inherit;font-weight:700;cursor:pointer}
+.btn:hover{filter:brightness(1.08)}
+.btn:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+.btn.ghost{background:transparent;color:var(--fg);border:1px solid var(--line);font-weight:500}
+.keys{font-size:12px;color:var(--muted);font-family:var(--mono)}
+.result{text-align:left}
+.big{font-family:var(--mono);font-size:clamp(40px,10vw,64px);font-weight:700;color:var(--teal);line-height:1;font-variant-numeric:tabular-nums}
+.grade{font-size:18px;font-weight:600}
+.review{display:flex;flex-direction:column;gap:10px}
+.rv{background:var(--navy);border:1px solid var(--line);border-left:3px solid var(--bad);border-radius:0 10px 10px 0;padding:12px 14px;display:flex;flex-direction:column;gap:4px}
+.rv .q{font-weight:600}
+.rv .a{color:var(--ok);font-size:14px}
+.rv .y{color:var(--bad);font-size:14px}
+.rv p{margin:0;color:var(--muted);font-size:14px}
+@media (max-width:480px){.stats{grid-template-columns:repeat(2,1fr)}.prompt{font-size:17px}.card{padding:16px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">AP Cybersecurity · Security+ SY0-701</div>
+    <h1>Simulado <span>20</span> questões</h1>
+    <p class="sub">Ameaças, criptografia, redes, operações e risco. 45 s por questão, acertos seguidos multiplicam os pontos.</p>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><small>Questão</small><b id="sQ">1/20</b></div>
+    <div class="stat"><small>Acertos</small><b id="sOk">0</b></div>
+    <div class="stat streak"><small>Sequência</small><b id="sStreak">×1</b></div>
+    <div class="stat"><small>Pontos</small><b id="sPts">0</b></div>
+  </div>
+  <div class="bar"><i id="prog"></i></div>
+
+  <main id="app"></main>
+</div>
+
+<script>
+const Q = [
+ {t:"Ameaças",p:"Um atacante na mesma LAN envia respostas ARP falsas para associar seu MAC ao IP do gateway. Qual técnica está sendo usada e qual a posição resultante?",o:["DNS spoofing, resultando em DoS","ARP spoofing, resultando em posição on-path (MITM)","MAC flooding, resultando em escalonamento de privilégio","Evil Twin, resultando em roubo de credenciais Wi-Fi"],c:1,e:"ARP spoofing é a técnica; on-path/MITM é a posição que ela produz. O mesmo MITM pode vir de outras técnicas, como DNS spoofing ou Evil Twin.",h:"Separe a técnica da posição que ela gera.",trap:"MITM é posição, não técnica"},
+ {t:"Senhas",p:"Sobre o uso de salt no armazenamento de senhas, qual afirmação é correta?",o:["O salt precisa ser mantido em segredo para funcionar","O salt impede força bruta contra senhas fracas","O salt torna inúteis rainbow tables, mesmo armazenado junto ao hash","O salt dispensa um algoritmo de hash lento"],c:2,e:"O salt é único por senha e pode ficar em claro ao lado do hash. Ele derruba tabelas pré-computadas e faz senhas iguais gerarem hashes diferentes, mas não salva senha fraca de força bruta direcionada.",trap:"Salt não é segredo"},
+ {t:"Senhas",p:"Uma empresa usa bcrypt com custo alto. Um usuário escolhe a senha \"123456\". O que acontece?",o:["A senha fica segura, pois o bcrypt é lento","A senha continua vulnerável: está entre as primeiras de qualquer dicionário","O bcrypt rejeita automaticamente senhas fracas","Só computação quântica quebra essa senha"],c:1,e:"Hash lento aumenta o custo por tentativa, mas se a senha está no topo da wordlist, poucas tentativas bastam.",trap:"Hash lento não compensa senha fraca"},
+ {t:"Malware",p:"Qual tipo de malware se propaga sozinho pela rede, sem interação do usuário, explorando vulnerabilidades?",o:["Vírus","Trojan","Worm","Rootkit"],c:2,e:"Worms se autorreplicam pela rede. Vírus precisam de hospedeiro e ação do usuário; trojans se disfarçam de software legítimo."},
+ {t:"Arquitetura",p:"Qual controle é mais eficaz para limitar a propagação lateral de um worm na rede corporativa?",o:["Segmentação de rede com regras de firewall entre segmentos","Política de senhas complexas","Criptografia de disco completo","Treinamento de conscientização"],c:0,e:"Segmentação reduz o raio de explosão: um host comprometido não alcança livremente os outros segmentos."},
+ {t:"Fundamentos",p:"Na tríade CIA, um ataque DDoS afeta principalmente qual pilar?",o:["Confidencialidade","Integridade","Disponibilidade","Não repúdio"],c:2,e:"DDoS torna o serviço indisponível para usuários legítimos. Não repúdio nem faz parte da tríade CIA."},
+ {t:"Criptografia",p:"Qual algoritmo é um exemplo de criptografia assimétrica?",o:["AES","RSA","SHA-256","3DES"],c:1,e:"RSA usa par de chaves pública/privada. AES e 3DES são simétricos; SHA-256 é hash, não cifra.",trap:"Hash não é criptografia"},
+ {t:"Criptografia",p:"Alice assina digitalmente um documento. Qual chave ela usa para assinar e qual Bob usa para verificar?",o:["Assina com a pública de Bob; Bob verifica com a privada dele","Assina com a privada dela; Bob verifica com a pública dela","Assina com a pública dela; Bob verifica com a privada dela","Ambos usam a mesma chave simétrica"],c:1,e:"Assinatura: privada do remetente assina, pública do remetente verifica. Garante autenticidade, integridade e não repúdio.",h:"Só Alice pode ter produzido a assinatura.",trap:"Cifrar = chave do destinatário; assinar = chave do remetente"},
+ {t:"Web",p:"O HSTS protege contra qual cenário?",o:["Qualquer tipo de ataque MITM","SSL stripping em sites que já enviaram o cabeçalho","DNS spoofing na rede local","Phishing com domínios parecidos"],c:1,e:"HSTS força HTTPS naquele domínio e bloqueia downgrade. Cobertura parcial: não resolve a primeira visita (sem preload), DNS spoofing nem domínios falsos.",trap:"Cobertura parcial"},
+ {t:"DNS",p:"O que o DNS over HTTPS (DoH) protege?",o:["Garante que o site de destino é legítimo","Criptografa as consultas DNS entre cliente e resolvedor","Oculta o IP de destino de todas as conexões","Substitui o DNSSEC na validação de respostas"],c:1,e:"DoH/DoT protegem o trajeto até o resolvedor. Não validam a autenticidade dos registros (papel do DNSSEC) e o IP de destino continua visível.",trap:"DoH ≠ DNSSEC"},
+ {t:"Operações",p:"Qual a principal diferença entre EDR e SOAR?",o:["EDR coleta telemetria e responde no endpoint; SOAR orquestra e automatiza respostas entre várias ferramentas","Ambos são sinônimos","SOAR é um antivírus baseado em assinaturas","EDR só funciona em servidores"],c:0,e:"O EDR monitora e age nos endpoints; o SOAR consome alertas (inclusive do EDR) e executa playbooks entre várias ferramentas."},
+ {t:"Eng. social",p:"Um e-mail direcionado ao CFO, se passando pelo CEO e pedindo transferência urgente, é um exemplo de:",o:["Vishing","Whaling","Smishing","Pharming"],c:1,e:"Whaling é spear phishing contra alto escalão. Vishing é voz, smishing é SMS, pharming redireciona tráfego para sites falsos."},
+ {t:"Identidade",p:"Qual combinação representa MFA verdadeira?",o:["Senha + PIN","Senha + pergunta de segurança","Senha + código de token físico","Impressão digital + reconhecimento facial"],c:2,e:"MFA exige categorias diferentes: algo que você sabe + algo que você tem. As outras repetem a mesma categoria.",trap:"Dois fatores da mesma categoria não são MFA"},
+ {t:"Identidade",p:"No modelo de controle de acesso em que o dono do recurso decide quem tem permissão, estamos falando de:",o:["MAC (Mandatory)","DAC (Discretionary)","RBAC (Role-Based)","ABAC (Attribute-Based)"],c:1,e:"No DAC o proprietário define permissões (ex.: NTFS). No MAC decidem rótulos do sistema; no RBAC, funções; no ABAC, atributos."},
+ {t:"Incidentes",p:"Qual a ordem correta das fases de resposta a incidentes?",o:["Detecção → Preparação → Contenção → Recuperação","Preparação → Detecção → Análise → Contenção → Erradicação → Recuperação → Lições aprendidas","Contenção → Detecção → Erradicação → Preparação","Análise → Recuperação → Contenção → Lições aprendidas"],c:1,e:"O ciclo começa na preparação, antes de qualquer incidente, e termina com lições aprendidas que alimentam a nova preparação."},
+ {t:"Redes",p:"Qual a vantagem de segurança percebida do NAT/PAT, e sua limitação?",o:["Bloqueia todo malware; não tem limitações","Esconde endereços internos e barra conexões de entrada não solicitadas, mas não inspeciona tráfego nem protege conexões iniciadas de dentro","Criptografa o tráfego da LAN","Substitui um firewall stateful"],c:1,e:"NAT não é controle de segurança por design. Um host infectado que conecta para fora (C2) passa normalmente.",trap:"NAT não é firewall"},
+ {t:"Redes",p:"Uma VPN de acesso remoto protege principalmente:",o:["O tráfego entre o dispositivo do usuário e o concentrador VPN","O endpoint contra malware","O tráfego depois que sai do concentrador para a internet","Contra phishing"],c:0,e:"O túnel cobre só o trecho cliente–concentrador. Endpoint comprometido, phishing e o trajeto após o concentrador ficam fora.",trap:"Cobertura parcial"},
+ {t:"Resiliência",p:"Qual métrica representa o tempo máximo aceitável para restaurar um serviço após uma interrupção?",o:["RPO","RTO","MTBF","ALE"],c:1,e:"RTO é o tempo para voltar a operar. RPO é quanto dado se aceita perder (medido em tempo). MTBF mede confiabilidade; ALE é perda anual esperada.",h:"T de Time to recover.",trap:"RTO × RPO"},
+ {t:"Risco",p:"Um ativo vale R$ 100.000, o fator de exposição é 25% e a ARO é 2. Qual o ALE?",o:["R$ 25.000","R$ 50.000","R$ 200.000","R$ 12.500"],c:1,e:"SLE = 100.000 × 0,25 = 25.000. ALE = SLE × ARO = 25.000 × 2 = 50.000.",h:"Calcule o SLE primeiro."},
+ {t:"Risco",p:"Contratar seguro cibernético para cobrir perdas com ransomware é qual estratégia de tratamento de risco?",o:["Aceitar","Evitar","Transferir","Mitigar"],c:2,e:"O seguro transfere o impacto financeiro a terceiros. Mitigar é reduzir com controles; evitar é deixar de fazer a atividade."}
+];
+const LETTERS="ABCD", TIME=45;
+const app=document.getElementById('app');
+let i,ok,streak,pts,answered,missed,timer,left;
+
+function start(){i=0;ok=0;streak=0;pts=0;missed=[];render();}
+function mult(){return Math.min(1+Math.floor(streak/3),4);}
+function stats(){
+  sQ.textContent=Math.min(i+1,Q.length)+"/"+Q.length;
+  sOk.textContent=ok; sStreak.textContent="×"+mult(); sPts.textContent=pts;
+  prog.style.width=(i/Q.length*100)+"%";
+}
+function esc(s){return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+
+function render(){
+  answered=false; stats();
+  const q=Q[i];
+  app.innerHTML=`
+  <div class="timer" id="tm"><i id="tmi"></i></div>
+  <section class="card" aria-live="polite">
+    <div class="qhead"><span class="tag">${q.t}</span><span class="qnum">Q${String(i+1).padStart(2,"0")} · <span id="sec">${TIME}</span>s</span></div>
+    <p class="prompt">${esc(q.p)}</p>
+    <div class="opts">${q.o.map((o,k)=>`<button class="opt" id="opt${k}" data-k="${k}"><kbd>${k+1}</kbd><span>${esc(o)}</span></button>`).join("")}</div>
+    ${q.h?`<button class="hintbtn" id="hintBtn">Mostrar dica</button>`:""}
+    <div id="fb"></div>
+    <div class="actions"><span class="keys">1–4 responde · Enter avança</span><button class="btn" id="next" hidden>Próxima</button></div>
+  </section>`;
+  app.querySelectorAll('.opt').forEach(b=>b.onclick=()=>answer(+b.dataset.k));
+  const hb=document.getElementById('hintBtn');
+  if(hb) hb.onclick=()=>{hb.outerHTML=`<p class="hint">💡 ${esc(q.h)}</p>`;};
+  document.getElementById('next').onclick=next;
+  left=TIME; clearInterval(timer);
+  requestAnimationFrame(()=>{document.getElementById('tmi').style.width="100%";});
+  timer=setInterval(tick,1000);
+}
+function tick(){
+  left--; const s=document.getElementById('sec'); if(s) s.textContent=Math.max(left,0);
+  const ti=document.getElementById('tmi'); if(ti) ti.style.width=(left/TIME*100)+"%";
+  if(left<=10) document.getElementById('tm')?.classList.add('low');
+  if(left<=0) answer(-1);
+}
+function answer(k){
+  if(answered) return; answered=true; clearInterval(timer);
+  const q=Q[i], right=k===q.c;
+  app.querySelectorAll('.opt').forEach(b=>b.disabled=true);
+  document.getElementById('opt'+q.c).classList.add('correct');
+  if(k>=0 && !right) document.getElementById('opt'+k).classList.add('wrong');
+  if(right){ok++;streak++;pts+=100*mult()+Math.max(left,0)*2;}
+  else{streak=0;missed.push({q,k});}
+  const head = right?"Correto!":(k<0?"Tempo esgotado.":"Não foi dessa vez.");
+  document.getElementById('fb').innerHTML=`<div class="feedback ${right?"":"bad"}">
+    <b>${head} Resposta: ${LETTERS[q.c]}</b>
+    ${q.trap?`<span class="trap">⚠ Pegadinha de prova: ${esc(q.trap)}</span>`:""}
+    <p>${esc(q.e)}</p></div>`;
+  const n=document.getElementById('next'); n.hidden=false;
+  n.textContent = i===Q.length-1?"Ver resultado":"Próxima"; n.focus();
+  stats();
+}
+function next(){ i++; if(i>=Q.length) finish(); else render(); }
+
+function finish(){
+  clearInterval(timer); prog.style.width="100%"; sQ.textContent=Q.length+"/"+Q.length;
+  const pct=Math.round(ok/Q.length*100);
+  const grade = pct>=90?"Pronta para a prova.":pct>=75?"Muito bom, revise os erros abaixo.":pct>=60?"No caminho, vale reforçar os tópicos errados.":"Hora de revisar com calma antes do próximo simulado.";
+  app.innerHTML=`<section class="card result">
+    <span class="eyebrow">Resultado</span>
+    <div class="big">${ok}/${Q.length}</div>
+    <div class="grade">${pct}% de acerto · ${pts} pontos</div>
+    <p class="sub">${grade}</p>
+    ${missed.length?`<h2 style="margin:8px 0 0;font-size:18px">Questões para revisar (${missed.length})</h2>
+    <div class="review">${missed.map(m=>`<div class="rv">
+      <span class="tag" style="align-self:flex-start">${m.q.t}</span>
+      <span class="q">${esc(m.q.p)}</span>
+      <span class="y">Sua resposta: ${m.k<0?"sem resposta (tempo)":LETTERS[m.k]+") "+esc(m.q.o[m.k])}</span>
+      <span class="a">Correta: ${LETTERS[m.q.c]}) ${esc(m.q.o[m.q.c])}</span>
+      <p>${esc(m.q.e)}</p></div>`).join("")}</div>`:`<p class="sub">Gabarito completo, nenhum erro.</p>`}
+    <div class="actions"><span class="keys">Enter recomeça</span><button class="btn" id="again">Refazer simulado</button></div>
+  </section>`;
+  document.getElementById('again').onclick=start;
+  i=Q.length;
+}
+
+document.addEventListener('keydown',e=>{
+  if(i>=Q.length){ if(e.key==="Enter"){e.preventDefault();start();} return; }
+  if(!answered && /^[1-4]$/.test(e.key)) answer(+e.key-1);
+  else if(answered && e.key==="Enter"){e.preventDefault();next();}
+});
+start();
+</script>
+</body>
+</html>
